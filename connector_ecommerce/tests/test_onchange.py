@@ -83,32 +83,32 @@ class test_onchange(common.TransactionCase):
                         'sequence': 1,
                         }
                  ),
-            ]
+            ],
+            # fake field for the lines coming from a backend
+            'backend_order_line': [
+                (0, 0, {'product_id': product.id,
+                        'price_unit': 10,
+                        'name': 'Line 2',
+                        'product_uom_qty': 2,
+                        'sequence': 2,
+                        }
+                 ),
+            ],
         }
-        order = sale_model.new(order_vals)
 
-        extra_lines = sale_line_model.new({
-            'product_id': product.id,
-            'price_unit': 10,
-            'name': 'Line 2',
-            'product_uom_qty': 2,
-            'sequence': 2,
-        })
+        extra_lines = order_vals['backend_order_line']
 
         onchange = SaleOrderOnChange(env)
-        order = onchange.play(order, order_lines=extra_lines)
+        order = onchange.play(order_vals, extra_lines)
 
-        self.assertEqual(order.partner_invoice_id, partner_invoice)
-        self.assertEqual(order.payment_term, payment_term)
-        self.assertEqual(len(order.order_line), 2)
-        for line in order.order_line:
-            if line.sequence == 1:
-                self.assertEqual(line.name, 'My Real Name')
-                self.assertEqual(line.th_weight, 15)
-                self.assertEqual(line.tax_id, tax)
-            elif line.sequence == 2:
-                self.assertEqual(line.name, 'Line 2')
-                self.assertEqual(line.th_weight, 30)
-                self.assertEqual(line.tax_id, tax)
-            else:
-                raise AssertionError('Unexpected sequence')
+        self.assertEqual(order['partner_invoice_id'], partner_invoice.id)
+        self.assertEqual(order['payment_term'], payment_term.id)
+        self.assertEqual(len(order['order_line']), 1)
+        line = order['order_line'][0][2]
+        self.assertEqual(line['name'], 'My Real Name')
+        self.assertEqual(line['th_weight'], 15)
+        self.assertEqual(line['tax_id'], [tax.id])
+        line = order['backend_order_line'][0][2]
+        self.assertEqual(line['name'], 'Line 2')
+        self.assertEqual(line['th_weight'], 30)
+        self.assertEqual(line['tax_id'], [tax.id])
