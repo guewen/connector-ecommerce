@@ -99,7 +99,7 @@ class ProductProduct(models.Model):
                                               ('state', '=', 'need_review')],
                                              limit=1,
                                              )
-            self.has_checkpoint = bool(points)
+            product.has_checkpoint = bool(points)
 
     has_checkpoint = fields.Boolean(compute='_get_checkpoint',
                                     string='Has Checkpoint')
